@@ -13,7 +13,7 @@ from azure_things.utils.mapper import categorize_work_items
 from azure_things.ui.sidebar import Sidebar
 from azure_things.ui.task_list import TaskList
 from azure_things.ui.settings import SettingsDialog
-from azure_things.ui.theme import BACKGROUND_COLOR, SURFACE_COLOR, TEXT_SECONDARY_COLOR
+from azure_things.ui.theme import BACKGROUND_COLOR, SURFACE_COLOR, TEXT_SECONDARY_COLOR, TEXT_PRIMARY_COLOR
 
 
 class AzureThingsApp:
@@ -25,9 +25,6 @@ class AzureThingsApp:
         self._work_items: List[WorkItem] = []
         self._categories: Dict[str, List[WorkItem]] = {n: [] for n in LIST_NAMES}
         self._current_list = "Inbox"
-        self._loading_indicator = ft.ProgressRing(
-            width=24, height=24, color=TEXT_SECONDARY_COLOR, visible=False
-        )
 
         self.sidebar = Sidebar(
             on_list_select=self._handle_list_select,
@@ -39,6 +36,37 @@ class AzureThingsApp:
             on_create=self._handle_task_create,
             on_refresh=self._handle_refresh,
         )
+
+    def _show_error(self, msg: str):
+        """Show an error message as a banner at the top of the page."""
+        error_banner = ft.Container(
+            content=ft.Row(
+                controls=[
+                    ft.Icon(ft.Icons.ERROR_OUTLINE, color=TEXT_PRIMARY_COLOR, size=16),
+                    ft.Text(msg, color=TEXT_PRIMARY_COLOR, size=13, expand=True),
+                    ft.IconButton(
+                        icon=ft.Icons.CLOSE,
+                        icon_color=TEXT_PRIMARY_COLOR,
+                        icon_size=14,
+                        on_click=lambda _: self._dismiss_error(error_banner),
+                    ),
+                ],
+                spacing=8,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            bgcolor="#FF3B30",
+            padding=ft.padding.symmetric(horizontal=16, vertical=8),
+            border_radius=8,
+            margin=ft.margin.only(left=16, right=16, top=8),
+        )
+        self.page.overlay.append(error_banner)
+        self.page.update()
+
+    def _dismiss_error(self, banner):
+        """Remove an error banner."""
+        if banner in self.page.overlay:
+            self.page.overlay.remove(banner)
+            self.page.update()
 
     def build(self):
         """Build and display the main app layout."""
@@ -91,7 +119,8 @@ class AzureThingsApp:
                 self._categories = categorize_work_items(self._work_items)
                 self.page.run_thread(update_ui)
             except Exception as e:
-                self.page.run_thread(lambda: show_error(str(e)))
+                error_msg = str(e)
+                self.page.run_thread(lambda: self._on_load_error(error_msg))
 
         def update_ui():
             counts = {name: len(items) for name, items in self._categories.items()}
@@ -101,17 +130,13 @@ class AzureThingsApp:
                 self._categories.get(self._current_list, []),
             )
 
-        def show_error(msg: str):
-            self.page.open(
-                ft.SnackBar(
-                    content=ft.Text(f"Error loading work items: {msg}"),
-                    bgcolor="#FF3B30",
-                )
-            )
-            self.task_list.set_items(self._current_list, [])
-
         thread = threading.Thread(target=fetch, daemon=True)
         thread.start()
+
+    def _on_load_error(self, msg: str):
+        """Handle work item load error on the UI thread."""
+        self._show_error(f"Error loading work items: {msg}")
+        self.task_list.set_items(self._current_list, [])
 
     def _handle_list_select(self, list_name: str):
         """Handle sidebar list selection."""
@@ -137,11 +162,8 @@ class AzureThingsApp:
                 )
                 self._load_work_items()
             except Exception as e:
-                self.page.run_thread(
-                    lambda: self.page.open(
-                        ft.SnackBar(content=ft.Text(f"Error: {e}"), bgcolor="#FF3B30")
-                    )
-                )
+                error_msg = str(e)
+                self.page.run_thread(lambda: self._show_error(f"Error: {error_msg}"))
 
         threading.Thread(target=do_update, daemon=True).start()
 
@@ -158,11 +180,8 @@ class AzureThingsApp:
                 )
                 self._load_work_items()
             except Exception as e:
-                self.page.run_thread(
-                    lambda: self.page.open(
-                        ft.SnackBar(content=ft.Text(f"Error: {e}"), bgcolor="#FF3B30")
-                    )
-                )
+                error_msg = str(e)
+                self.page.run_thread(lambda: self._show_error(f"Error: {error_msg}"))
 
         threading.Thread(target=do_delete, daemon=True).start()
 
@@ -182,11 +201,8 @@ class AzureThingsApp:
                 self._client.create_work_item(title, **kwargs)
                 self._load_work_items()
             except Exception as e:
-                self.page.run_thread(
-                    lambda: self.page.open(
-                        ft.SnackBar(content=ft.Text(f"Error: {e}"), bgcolor="#FF3B30")
-                    )
-                )
+                error_msg = str(e)
+                self.page.run_thread(lambda: self._show_error(f"Error: {error_msg}"))
 
         threading.Thread(target=do_create, daemon=True).start()
 
@@ -197,7 +213,7 @@ class AzureThingsApp:
     def _handle_settings(self):
         """Show the settings dialog."""
         dialog = SettingsDialog(self.page, on_save=self._on_credentials_saved)
-        self.page.open(dialog.build())
+        self.page.show_dialog(dialog.build())
 
     def _on_credentials_saved(self):
         """Handle credential save from settings dialog."""

@@ -81,12 +81,12 @@ class SettingsDialog:
             return
 
         self.save_credentials(org, pat, project)
-        self.page.close(self._dialog)
+        self.page.pop_dialog()
         if self.on_save:
             self.on_save()
 
     def _handle_cancel(self, e):
-        self.page.close(self._dialog)
+        self.page.pop_dialog()
 
     def build(self) -> ft.AlertDialog:
         self._dialog = ft.AlertDialog(
