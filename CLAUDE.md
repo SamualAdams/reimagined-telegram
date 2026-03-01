@@ -6,32 +6,42 @@ This file contains instructions and guidelines for Claude Code when working on t
 
 **Azure Things** is a Things app-like interface for managing Azure Boards work items. It's a Python application using UV for package management, Flet for the UI, and a simple .env file for credentials.
 
+## Planning Authority
+
+The `pm/` directory is the source of truth for project scope, sequencing, and what work is allowed.
+
+- Only implement work that is explicitly described in the current PM phase documents.
+- If the repository only contains `pm/phase0/`, treat the project as Phase 0 even if the branch name references a later phase such as `phase1-*`.
+- Roadmap text that mentions future phases does not authorize implementing those phases until matching `pm/phaseN/` docs exist.
+- Branch names, TODO comments, and placeholder files do not authorize new implementation work on their own.
+- If code, branch naming, or docs conflict, stop and align to `pm/` first.
+- Do not build future phases until the corresponding PM phase directory and requirements exist.
+
 ## Development Workflow
 
 ### Issue and PR Templates
 
-This project follows the **VSCode repository pattern** for issues and pull requests. Templates are located in `.github/`:
+This project follows the **VSCode repository pattern** for issues and pull requests. The canonical templates currently live in `pm/phase0/`. Only mirror them into `.github/` when that work is explicitly requested in PM scope.
 
 **Test Plan Items (Issues):**
-- Use `.github/ISSUE_TEMPLATE/test-plan.md` for comprehensive feature test plans
+- Use `pm/phase0/template-issue.md` as the source template for comprehensive feature test plans
 - Include platform coverage, setup instructions, and detailed scenarios
 - Follow the "Should..." pattern for acceptance criteria
-- Reference: See `pm/phase0/example-issue.md` for a complete example
+- Reference: `pm/phase0/template-issue.md`
 
 **Pull Requests:**
-- Use `.github/PULL_REQUEST_TEMPLATE.md` for all PRs
+- Use `pm/phase0/template-pr.md` as the source template for pull requests
 - Include summary, detailed changes, testing steps, and checklists
 - Always add "Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
-- Reference: See `pm/phase0/example-pr.md` for a complete example
+- Reference: `pm/phase0/template-pr.md`
 
 ### Creating Issues
 
 ```bash
 # Create a test plan issue using the template
-gh issue create --template test-plan.md
+gh issue create --title "Test: [Feature]" --body "$(cat pm/phase0/template-issue.md)"
 
-# Or create from scratch with template content
-gh issue create --title "Test: [Feature]" --body "$(cat .github/ISSUE_TEMPLATE/test-plan.md)"
+# If .github templates are added later, the command can be updated to use them
 ```
 
 ### Creating Pull Requests
@@ -40,7 +50,7 @@ gh issue create --title "Test: [Feature]" --body "$(cat .github/ISSUE_TEMPLATE/t
 # Create a PR (template auto-fills)
 gh pr create --draft --title "[Phase]: Description"
 
-# The template in .github/PULL_REQUEST_TEMPLATE.md will auto-populate
+# If .github templates are added later, GitHub can auto-populate from there
 ```
 
 ## Project Structure
@@ -52,7 +62,7 @@ reimagined-telegram/
 ├── src/azure_things/     # All source code here
 ├── tests/                # Mirror src structure
 ├── pm/phase0/            # Planning docs (narrative format)
-└── .github/              # Issue/PR templates
+└── .github/              # Optional mirror of PM templates when explicitly requested
 ```
 
 ### Module Organization
@@ -119,6 +129,8 @@ phase2-azure-integration
 feature/specific-feature
 bugfix/specific-bug
 ```
+
+Branch names are labels only. They do not override the active phase defined in `pm/`.
 
 **Creating PRs:**
 1. Create feature branch from main
@@ -226,6 +238,6 @@ See `utils/mapper.py` for implementation.
 
 ## References
 
-- **Example Test Plan:** `pm/phase0/example-issue.md`
-- **Example PR:** `pm/phase0/example-pr.md`
+- **Test Plan Template:** `pm/phase0/template-issue.md`
+- **PR Template:** `pm/phase0/template-pr.md`
 - **VSCode Issue Pattern:** https://github.com/microsoft/vscode/issues/297090

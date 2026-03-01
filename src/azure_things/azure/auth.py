@@ -12,7 +12,5 @@ def get_auth_header(pat: str) -> dict:
     Returns:
         Dictionary with Authorization header
     """
-    # TODO: Implement in Phase 2
-    # Encode PAT as Base64 for Basic Auth
-    # Format: Authorization: Basic :{PAT}
-    pass
+    encoded = base64.b64encode(f":{pat}".encode()).decode()
+    return {"Authorization": f"Basic {encoded}"}

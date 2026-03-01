@@ -5,12 +5,7 @@ from azure_things.config import COLORS
 
 
 def get_theme() -> ft.Theme:
-    """Get the Things app-style dark theme.
-
-    Returns:
-        Flet Theme object
-    """
-    # TODO: Implement complete theme in Phase 5
+    """Get the Things app-style dark theme."""
     return ft.Theme(
         color_scheme_seed=COLORS["primary"],
     )
@@ -22,3 +17,5 @@ SURFACE_COLOR = COLORS["surface"]
 PRIMARY_COLOR = COLORS["primary"]
 TEXT_PRIMARY_COLOR = COLORS["text_primary"]
 TEXT_SECONDARY_COLOR = COLORS["text_secondary"]
+SIDEBAR_COLOR = "#252527"
+HOVER_COLOR = "#3A3A3C"

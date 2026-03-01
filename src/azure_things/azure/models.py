@@ -6,10 +6,7 @@ from pydantic import BaseModel
 
 
 class WorkItem(BaseModel):
-    """Represents an Azure Boards work item.
-
-    This model will be implemented in Phase 2 with all necessary fields.
-    """
+    """Represents an Azure Boards work item."""
 
     id: int
     title: str
@@ -18,14 +15,16 @@ class WorkItem(BaseModel):
     priority: Optional[int] = None
     due_date: Optional[datetime] = None
     created_date: datetime
-    # TODO: Add more fields in Phase 2
+    tags: list[str] = []
+    assigned_to: Optional[str] = None
+    description: Optional[str] = None
 
 
 class WorkItemUpdate(BaseModel):
-    """Represents an update to a work item.
+    """Represents an update to a work item for PATCH operations."""
 
-    Used for PATCH operations on work items.
-    """
-
-    # TODO: Implement in Phase 2
-    pass
+    title: Optional[str] = None
+    state: Optional[str] = None
+    priority: Optional[int] = None
+    due_date: Optional[datetime] = None
+    tags: Optional[list[str]] = None
